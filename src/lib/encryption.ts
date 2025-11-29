@@ -1,5 +1,5 @@
 import * as crypto from "crypto";
-import { nanoid } from "nanoid/non-secure";
+import { nanoid } from "nanoid";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -60,10 +60,13 @@ const sec = new Security();
 
 export const Encryption = (input: string) => {
   const enc = sec.encrypt(input);
-  const id = nanoid();
-  const GENERATE_URL = `http://localhost:3000/api/messages/${id}`;
-  console.log(GENERATE_URL);
-  return enc;
+  if (!enc) {
+    throw new Error("Enc is empty.");
+  }
+  const id = nanoid(8);
+  const GENERATE_URL = `${id}`;
+
+  return { enc, GENERATE_URL };
 };
 
 export const Decryption = (enc: string) => {
