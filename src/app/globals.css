@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -76,6 +76,11 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --neon-purple: #b026ff;
+  --neon-green: #00ff41;
+  --neon-cyan: #00f3ff;
+  --void: #050505;
+  --void-lighter: #0a0a0a;
 }
 
 .dark {
@@ -119,4 +124,83 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+.text-glow-green {
+  text-shadow:
+    0 0 10px rgba(0, 255, 65, 0.5),
+    0 0 20px rgba(0, 255, 65, 0.3);
+}
+
+/* Cyberpunk Animations */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes pulse-slow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Color Classes */
+.bg-neon-green {
+  background-color: var(--neon-green);
+}
+
+.bg-void {
+  background-color: var(--void);
+}
+
+.text-neon-green {
+  color: var(--neon-green);
+}
+
+.text-neon-purple {
+  color: var(--neon-purple);
+}
+
+.text-neon-cyan {
+  color: var(--neon-cyan);
+}
+.neon-purple {
+  color: var(--neon-purple);
+}
+
+.border-neon-green {
+  border-color: var(--neon-green);
+}
+
+/* Background opacity utilities */
+.bg-neon-green\/5 {
+  background-color: rgba(0, 255, 65, 0.05);
+}
+
+.bg-neon-green\/10 {
+  background-color: rgba(0, 255, 65, 0.1);
+}
+
+.border-neon-green\/20 {
+  border-color: rgba(0, 255, 65, 0.2);
+}
+
+.shadow-neon-green\/5 {
+  box-shadow: 0 25px 50px -12px rgba(0, 255, 65, 0.05);
 }
