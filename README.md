@@ -157,34 +157,6 @@ bunx drizzle-kit studio     # Open database studio
 node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
-## 🚦 API Reference
-
-### POST `/api/message`
-
-Encrypt and store a message.
-
-**Request Body:**
-
-```json
-{
-	"input": "Your secret message here"
-}
-```
-
-**Response:**
-
-```json
-{
-	"input": "Your secret message here",
-	"enc": "encrypted_ciphertext_here",
-	"GENERATE_URL": "unique_message_id"
-}
-```
-
-### GET `/composer/[id]`
-
-Retrieve and decrypt a message by ID.
-
 ## 🎨 UI/UX Features
 
 - **Terminal Aesthetics**: Cyberpunk-inspired design with neon green/purple accents
@@ -195,14 +167,6 @@ Retrieve and decrypt a message by ID.
 
 ## 🔧 Configuration
 
-### Tailwind Custom Classes
-
-The project uses custom CSS variables for the cyberpunk theme:
-
-```css
---neon-green: #00ff41 --neon-purple: #b026ff --neon-cyan: #00f3ff --void: #0a0a0a;
-```
-
 ### Encryption Settings
 
 Configure encryption parameters in `src/lib/encryption.ts`:
@@ -211,62 +175,6 @@ Configure encryption parameters in `src/lib/encryption.ts`:
 - **Key Size**: 256 bits
 - **IV Size**: 128 bits (16 bytes)
 - **Encoding**: Hexadecimal
-
-## 🚀 Deployment
-
-### Vercel (Recommended)
-
-1. Push your code to GitHub
-2. Connect your repository to Vercel
-3. Configure environment variables in Vercel dashboard
-4. Deploy automatically on push
-
-### Docker
-
-```dockerfile
-# Use the official Node.js runtime as base image
-FROM oven/bun:1 as base
-
-WORKDIR /app
-COPY package.json bun.lockb ./
-RUN bun install
-
-COPY . .
-RUN bun run build
-
-EXPOSE 3000
-CMD ["bun", "start"]
-```
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit changes: `git commit -m 'Add amazing feature'`
-4. Push to branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
-
-### Development Guidelines
-
-- Follow TypeScript best practices
-- Use ESLint configuration provided
-- Write meaningful commit messages
-- Add tests for new features
-- Update documentation for API changes
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## ⚠️ Disclaimer
-
-This software is provided for educational and research purposes. Users are responsible for compliance with local laws and regulations regarding encryption and privacy tools.
-
-## 🔗 Links
-
-- **Live Demo**: [https://erased.vercel.app](https://erased.vercel.app)
-- **Documentation**: [https://docs.erased.app](https://docs.erased.app)
-- **Issues**: [https://github.com/your-username/erased/issues](https://github.com/your-username/erased/issues)
 
 ---
 
