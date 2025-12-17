@@ -1,22 +1,47 @@
 import { NextResponse } from "next/server";
 
-import { Decryption, Encryption } from "@/lib/encryption";
 import { db } from "@/index";
 import { MessagesTable } from "@/db/schema";
+import { PostBodyType } from "@/types/common";
+import { getExpirationTime, getMaxViewsHelper } from "@/lib/Helper";
 
 export const GET = () => {
   return NextResponse.json({ msg: "Done" });
 };
 
 export const POST = async (req: Request) => {
-  const { input } = await req.json();
-  console.log(input);
-  // const enc = sec.encrypt(input);
-  const { enc, GENERATE_URL } = Encryption(input);
-
-  //This adds it up
   try {
-    await db.insert(MessagesTable).values({ message: enc, link: GENERATE_URL });
+    const body = (await req.json()) as PostBodyType;
+
+    const { settings, res } = body;
+
+    if (!res?.encrypted || !res.iv || !res.lookupLink) {
+      return NextResponse.json(
+        { error: "Missing required encryption data" },
+        { status: 400 },
+      );
+    }
+
+    // Use this
+    const encryptionType = settings.encryption;
+    const maxViews = getMaxViewsHelper(settings.views);
+    const expriration = getExpirationTime(settings.expiration);
+
+    //This adds it up
+
+    await db.insert(MessagesTable).values({
+      message: res.encrypted,
+      link: res.lookupLink,
+      expiresAt: expriration,
+      maxViews,
+      iv: res.iv,
+    });
+
+    return NextResponse.json({
+      success: true,
+      link: res.lookupLink,
+      fullUrl: res.GENERATE_URL,
+    });
   } catch (err) {
     console.error("POST /api/message error:", err);
     return NextResponse.json(
@@ -24,6 +49,4 @@ export const POST = async (req: Request) => {
       { status: 500 },
     );
   }
-
-  return NextResponse.json({ input, enc, GENERATE_URL });
 };
