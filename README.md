@@ -1,4 +1,4 @@
-# 🔒 ERASED
+# 🔒 Vanix
 
 **Silence is Currency** — End-to-end encrypted ephemeral messaging platform
 
@@ -9,7 +9,7 @@
 
 ## 🎯 Overview
 
-Erased is a cyberpunk-themed, end-to-end encrypted messaging platform that prioritizes privacy and security. Messages are encrypted client-side before transmission and can be configured to self-destruct after reading, ensuring absolute deniability and zero-knowledge architecture.
+Vanix is a cyberpunk-themed, end-to-end encrypted messaging platform that prioritizes privacy and security. Messages are encrypted client-side before transmission and can be configured to self-destruct after reading, ensuring absolute deniability and zero-knowledge architecture.
 
 ### 🌟 Key Features
 
@@ -33,8 +33,8 @@ Erased is a cyberpunk-themed, end-to-end encrypted messaging platform that prior
 1. **Clone the repository**
 
     ```bash
-    git clone https://github.com/your-username/erased.git
-    cd erased
+    git clone https://github.com/your-username/vanix.git
+    cd vanix
     ```
 
 2. **Install dependencies**
@@ -91,7 +91,7 @@ Erased is a cyberpunk-themed, end-to-end encrypted messaging platform that prior
 ### Project Structure
 
 ```
-erased/
+vanix/
 ├── src/
 │   ├── app/                    # Next.js App Router
 │   │   ├── (encrypted-Messages)/
