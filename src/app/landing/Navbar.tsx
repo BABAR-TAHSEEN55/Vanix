@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Menu, X, Box, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -43,7 +43,8 @@ const Navbar = () => {
               <div className="absolute inset-0 bg-neon-green/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
             <div className="font-mono font-bold text-xl tracking-widest group-hover:text-glow-green transition-all text-white">
-              ERASED
+              {/*ERASED*/}
+              Vanix
             </div>
           </div>
         </Link>
