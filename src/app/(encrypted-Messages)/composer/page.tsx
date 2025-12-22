@@ -21,7 +21,7 @@ import {
 import { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
 type ViewLimit = "1 (Burn)" | "5 Views" | "10 Views" | "Unlimited";
-type EncryptionType = "AES-256-GCM" | "ChaCha20-Poly1305" | "Rabbit-Legacy";
+type EncryptionType = "AES-256-GCM" | "AES-CTR" | "PBKDF2-HMAC";
 type Expiration = "1 Hour" | "24 Hours" | "7 Days" | "Never";
 const InitialSettings = {
   encryption: "AES-256-GCM",
@@ -194,8 +194,8 @@ const MessageComposer = () => {
                     {(
                       [
                         "AES-256-GCM",
-                        "ChaCha20-Poly1305",
-                        "Rabbit-Legacy",
+                        "AES-CTR",
+                        "PBKDF2-HMAC",
                       ] as EncryptionType[]
                     ).map((type) => (
                       <button
