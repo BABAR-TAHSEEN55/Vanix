@@ -1,4 +1,4 @@
-# 🔒 Vanix
+# Vanix
 
 **Silence is Currency** — End-to-end encrypted ephemeral messaging platform
 
@@ -7,20 +7,20 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-green?logo=postgresql)](https://neon.tech/)
 
-## 🎯 Overview
+## Overview
 
 Vanix is a cyberpunk-themed, end-to-end encrypted messaging platform that prioritizes privacy and security. Messages are encrypted client-side before transmission and can be configured to self-destruct after reading, ensuring absolute deniability and zero-knowledge architecture.
 
-### 🌟 Key Features
+### Key Features
 
-- **🔥 Vanish Mode** - Self-destructing notes that are cryptographically burned after reading
-- **🔐 Client-Side Encryption** - AES-256-CBC encryption happens in your browser
-- **🔗 Ephemeral Links** - One-time access URLs with embedded decryption keys
-- **⚡ Zero Knowledge** - Server never sees your unencrypted data
-- **🎨 Cyberpunk UI** - Terminal-inspired interface with neon aesthetics
-- **📱 Responsive Design** - Works seamlessly across all devices
+- **Vanish Mode** - Self-destructing notes that are cryptographically burned after reading
+- **Client-Side Encryption** - AES-256-CBC encryption happens in your browser
+- **Ephemeral Links** - One-time access URLs with embedded decryption keys
+- **Zero Knowledge** - Server never sees your unencrypted data
+- **Cyberpunk UI** - Terminal-inspired interface with neon aesthetics
+- **Responsive Design** - Works seamlessly across all devices
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -77,7 +77,7 @@ Vanix is a cyberpunk-themed, end-to-end encrypted messaging platform that priori
 
     Open [http://localhost:3000](http://localhost:3000) to see the application.
 
-## 🏗️ Architecture
+## Architecture
 
 ### Tech Stack
 
@@ -107,7 +107,7 @@ vanix/
 └── ...config files
 ```
 
-## 🔐 Security Architecture
+## Security Architecture
 
 ### Encryption Flow
 
@@ -125,7 +125,7 @@ vanix/
 - **Memory Safe**: No plaintext persistence in server memory
 - **Transport Security**: HTTPS enforced for all communications
 
-## 🛠️ Development
+## Development
 
 ### Available Scripts
 
@@ -146,9 +146,9 @@ bunx drizzle-kit studio     # Open database studio
 
 | Variable              | Description                           | Required |
 | --------------------- | ------------------------------------- | -------- |
-| `DATABASE_URL`        | PostgreSQL connection string          | ✅       |
-| `CRYPTO_KEY`          | Base64-encoded 32-byte encryption key | ✅       |
-| `NEXT_PUBLIC_APP_URL` | Public app URL for link generation    | ⚠️       |
+| `DATABASE_URL`        | PostgreSQL connection string          | Yes      |
+| `CRYPTO_KEY`          | Base64-encoded 32-byte encryption key | Yes      |
+| `NEXT_PUBLIC_APP_URL` | Public app URL for link generation    | Optional |
 
 ### Generating Encryption Key
 
@@ -157,7 +157,7 @@ bunx drizzle-kit studio     # Open database studio
 node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
-## 🎨 UI/UX Features
+## UI/UX Features
 
 - **Terminal Aesthetics**: Cyberpunk-inspired design with neon green/purple accents
 - **Real-time Encryption Animation**: Visual feedback during encryption process
@@ -165,7 +165,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 - **Dark Theme**: Eye-friendly dark interface
 - **Accessibility**: WCAG compliant color contrasts and keyboard navigation
 
-## 🔧 Configuration
+## Configuration
 
 ### Encryption Settings
 
@@ -178,6 +178,6 @@ Configure encryption parameters in `src/lib/encryption.ts`:
 
 ---
 
-**Remember**: In the digital age, silence truly is currency. 🔒
+**Remember**: In the digital age, silence truly is currency.
 
 _"Zero logs. Zero knowledge. Absolute deniability."_
