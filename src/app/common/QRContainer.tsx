@@ -1,8 +1,10 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import QRCode from "react-qr-code";
 import { X } from "lucide-react";
 
+import * as htmltoImage from "html-to-image";
+import { Button } from "@/components/ui/button";
 type Props = {
   value: string;
   size?: number;
@@ -21,7 +23,22 @@ const QRContainer = ({ value, size = 200, onClose, className }: Props) => {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
+  const refContainer = useRef(null);
 
+  const downloadQr = () => {
+    if (!refContainer.current) return;
+    htmltoImage
+      .toPng(refContainer?.current)
+      .then((dataUrl) => {
+        const link = document.createElement("a");
+        link.href = dataUrl;
+        link.download = "qr-code.png";
+        link.click();
+      })
+      .catch((err) => {
+        console.log("Errro", err);
+      });
+  };
   return (
     <div
       className="fixed inset-0 z-60 flex items-center justify-center pt-12 bg-black/60 backdrop-blur-sm"
@@ -45,7 +62,10 @@ const QRContainer = ({ value, size = 200, onClose, className }: Props) => {
           </button>
         </div>
 
-        <div className="flex justify-center bg-white p-3 rounded">
+        <div
+          className="flex justify-center bg-white p-3 rounded"
+          ref={refContainer}
+        >
           <QRCode
             size={size}
             value={value}
@@ -53,6 +73,9 @@ const QRContainer = ({ value, size = 200, onClose, className }: Props) => {
             style={{ width: "100%", height: "auto" }}
           />
         </div>
+        <Button className="w-full" onClick={downloadQr}>
+          Download
+        </Button>
       </div>
     </div>
   );
