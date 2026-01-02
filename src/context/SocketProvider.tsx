@@ -1,20 +1,80 @@
 "use client";
 
-import { Dispatch, SetStateAction } from "react";
-import { Socket } from "socket.io-client";
+import {
+  createContext,
+  Dispatch,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { io, Socket } from "socket.io-client";
+import { nanoid } from "nanoid";
 
-type SocketContext = {
-  socket: Socket;
+export interface SocketContextType {
+  socket: Socket | null;
   userId: string;
   socketId: string | null;
   setSocketId: Dispatch<SetStateAction<string | null>>;
   peerState: string;
-  setPeerState: Dispatch<SetStateAction<number | string>>;
-};
-const useSocket = () => {};
+  setPeerState: Dispatch<SetStateAction<string>>;
+}
 
-const SocketProvider = () => {
-  return <div></div>;
+const SocketContext = createContext<SocketContextType | null>(null);
+
+export const useSocket = () => {
+  const ctx = useContext(SocketContext);
+  if (!ctx) {
+    throw new Error("useSocket must be used within SocketProvider");
+  }
+  return ctx;
+};
+
+const SocketProvider = ({ children }: { children: React.ReactNode }) => {
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const [socketId, setSocketId] = useState<string | null>(null);
+  const [peerState, setPeerState] = useState<string>("");
+
+  const userId = useMemo(() => nanoid(10), []);
+
+  useEffect(() => {
+    const sock = io("http://localhost:8000", {
+      autoConnect: true,
+    });
+
+    setSocket(sock);
+
+    // Connection
+    sock.on("connect", () => {
+      setSocketId(sock.id ?? null);
+    });
+
+    //Disconnection
+    sock.on("disconnect", () => {
+      setSocketId(null);
+    });
+
+    return () => {
+      sock.disconnect();
+      setSocket(null);
+    };
+  }, []);
+
+  return (
+    <SocketContext.Provider
+      value={{
+        socket,
+        userId,
+        socketId,
+        setSocketId,
+        peerState,
+        setPeerState,
+      }}
+    >
+      {children}
+    </SocketContext.Provider>
+  );
 };
 
 export default SocketProvider;
