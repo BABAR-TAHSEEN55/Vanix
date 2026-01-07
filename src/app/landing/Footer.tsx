@@ -1,8 +1,6 @@
-import React from "react";
 import { Github, Shield, Lock, Terminal } from "lucide-react";
 import Link from "next/link";
 import Year from "../common/Year";
-
 const Footer = () => {
   return (
     <footer className=" border-t border-white/10 pt-20 pb-10 relative overflow-hidden">

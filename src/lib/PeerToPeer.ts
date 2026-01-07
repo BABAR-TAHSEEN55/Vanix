@@ -6,6 +6,12 @@ const ICE_SERVERS = {
       username: "free",
       credential: "free",
     },
+
+    {
+      urls: "turn:openrelay.metered.ca:80",
+      username: "openrelayproject",
+      credential: "openrelayproject",
+    },
   ],
 };
 
@@ -13,6 +19,8 @@ class WebRTCPeerConnection {
   private peerConnection: RTCPeerConnection;
   private dataChannel: RTCDataChannel | null = null;
   public isSender: boolean;
+  private onDataCallBack?: (data: any) => void;
+  private onConnectionStateCallback?: (state: string) => void;
 
   constructor(isSender: boolean = true) {
     this.isSender = isSender;
@@ -24,15 +32,30 @@ class WebRTCPeerConnection {
     if (isSender) {
       // Sender creates data channel and offer
       this.setUpDataChannels();
-      this.createOffer();
+      this.peerConnection.onnegotiationneeded = async () => {
+        this.createOffer();
+      };
     } else {
       // Receiver waits for incoming data channel
       this.peerConnection.ondatachannel = (event) => {
         console.log("Data channel received from sender");
+        console.log(JSON.stringify(event));
         this.dataChannel = event.channel;
         this.setupDataChannelHandlers(this.dataChannel);
       };
     }
+  }
+
+  public isDataChannelOpen(): boolean {
+    return this.dataChannel?.readyState === "open";
+  }
+
+  public onData(callback: (data: any) => void) {
+    this.onDataCallBack = callback;
+  }
+
+  public onConnectionState(callback: (state: string) => void) {
+    this.onConnectionStateCallback = callback;
   }
 
   public async createOffer(): Promise<RTCSessionDescriptionInit | null> {
@@ -66,12 +89,16 @@ class WebRTCPeerConnection {
     this.peerConnection.onconnectionstatechange = () => {
       console.log("Connection State:", this.peerConnection.connectionState);
 
+      // Call custom callback
+      if (this.onConnectionStateCallback) {
+        this.onConnectionStateCallback(this.peerConnection.connectionState);
+      }
+
       if (this.peerConnection.connectionState === "connected") {
-        console.log(" Peers are connected!");
+        console.log("Peers are connected!");
       }
     };
   }
-
   private setUpDataChannels() {
     this.dataChannel = this.peerConnection.createDataChannel("file-transfer");
     console.log("Data channel created");
@@ -93,6 +120,16 @@ class WebRTCPeerConnection {
 
     channel.onmessage = (e) => {
       console.log("Message received:", e.data);
+
+      if (this.onDataCallBack) {
+        try {
+          const parsedData = JSON.parse(e.data);
+          this.onDataCallBack(parsedData);
+        } catch (err) {
+          this.onDataCallBack(e.data);
+          console.log("err", err);
+        }
+      }
     };
   }
 
@@ -115,6 +152,15 @@ class WebRTCPeerConnection {
   public async setRemoteAnswer(answerSdp: RTCSessionDescriptionInit) {
     try {
       await this.peerConnection.setRemoteDescription(answerSdp);
+      console.log(" Answer set as remote description");
+    } catch (err) {
+      console.log("Error while setting remote answer:", err);
+    }
+  }
+
+  public async setRemoteOffer(Offer: RTCSessionDescriptionInit) {
+    try {
+      await this.peerConnection.setRemoteDescription(Offer);
       console.log(" Answer set as remote description");
     } catch (err) {
       console.log("Error while setting remote answer:", err);
@@ -150,4 +196,4 @@ class WebRTCPeerConnection {
 
 export default WebRTCPeerConnection;
 
-// TODO: DIY and from hussain again
+// 2)

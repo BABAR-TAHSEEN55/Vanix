@@ -5,6 +5,7 @@ export default class NewSecurity {
   //   // console.log("Hurray I'm called");
   // }
 
+  // Key to be present in the URL ( BASE64 -> Binary data representation )
   public generateKey = (): string => {
     const array = new Uint8Array(32);
     crypto.getRandomValues(array);
@@ -47,7 +48,7 @@ export default class NewSecurity {
     }
   };
 
-  decryptInBrowser = async (
+  public decryptInBrowser = async (
     encryptedData: string,
     iv: string,
     keyString: string,
@@ -80,7 +81,7 @@ export default class NewSecurity {
       );
 
       const decoder = new TextDecoder();
-      console.log("I AM DEC", decoder.decode(decrypted));
+      // console.log("I AM DEC", decoder.decode(decrypted));
       return decoder.decode(decrypted);
     } catch (error) {
       console.error("Decryption failed:", error);
@@ -111,6 +112,7 @@ export default class NewSecurity {
 // };
 
 // Test();
+
 const sec = new NewSecurity();
 
 export const NewEncryption = async (input: string) => {

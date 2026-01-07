@@ -1,6 +1,5 @@
 import { integer, pgTable, timestamp, varchar } from "drizzle-orm/pg-core";
 
-// TODO: Do not null
 export const MessagesTable = pgTable("messages", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   message: varchar().notNull(),
@@ -11,3 +10,6 @@ export const MessagesTable = pgTable("messages", {
   expiresAt: timestamp(),
   createdAt: timestamp().defaultNow(),
 });
+
+//  TODO: : Create dockerfile with bind mounts for hot reloading
+// TODO: Migrate entire setup to simple-peer
