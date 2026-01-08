@@ -6,7 +6,6 @@ const ICE_SERVERS = {
       username: "free",
       credential: "free",
     },
-
     {
       urls: "turn:openrelay.metered.ca:80",
       username: "openrelayproject",
@@ -15,11 +14,13 @@ const ICE_SERVERS = {
   ],
 };
 
+type DataMessage = string | object;
+
 class WebRTCPeerConnection {
   private peerConnection: RTCPeerConnection;
   private dataChannel: RTCDataChannel | null = null;
   public isSender: boolean;
-  private onDataCallBack?: (data: any) => void;
+  private onDataCallBack?: (data: DataMessage) => void;
   private onConnectionStateCallback?: (state: string) => void;
 
   constructor(isSender: boolean = true) {
@@ -50,7 +51,7 @@ class WebRTCPeerConnection {
     return this.dataChannel?.readyState === "open";
   }
 
-  public onData(callback: (data: any) => void) {
+  public onData(callback: (data: DataMessage) => void) {
     this.onDataCallBack = callback;
   }
 
@@ -99,6 +100,7 @@ class WebRTCPeerConnection {
       }
     };
   }
+
   private setUpDataChannels() {
     this.dataChannel = this.peerConnection.createDataChannel("file-transfer");
     console.log("Data channel created");
@@ -136,11 +138,11 @@ class WebRTCPeerConnection {
   public async createAnswer(offerSdp: RTCSessionDescriptionInit) {
     try {
       await this.peerConnection.setRemoteDescription(offerSdp);
-      console.log(" Offer set as remote description");
+      console.log("Offer set as remote description");
 
       const answer = await this.peerConnection.createAnswer();
       await this.peerConnection.setLocalDescription(answer);
-      console.log(" Answer created and set as local description");
+      console.log("Answer created and set as local description");
 
       return answer;
     } catch (err) {
@@ -152,18 +154,18 @@ class WebRTCPeerConnection {
   public async setRemoteAnswer(answerSdp: RTCSessionDescriptionInit) {
     try {
       await this.peerConnection.setRemoteDescription(answerSdp);
-      console.log(" Answer set as remote description");
+      console.log("Answer set as remote description");
     } catch (err) {
       console.log("Error while setting remote answer:", err);
     }
   }
 
-  public async setRemoteOffer(Offer: RTCSessionDescriptionInit) {
+  public async setRemoteOffer(offer: RTCSessionDescriptionInit) {
     try {
-      await this.peerConnection.setRemoteDescription(Offer);
-      console.log(" Answer set as remote description");
+      await this.peerConnection.setRemoteDescription(offer);
+      console.log("Offer set as remote description");
     } catch (err) {
-      console.log("Error while setting remote answer:", err);
+      console.log("Error while setting remote offer:", err);
     }
   }
 
@@ -171,10 +173,10 @@ class WebRTCPeerConnection {
   public sendMessage(message: string) {
     if (this.dataChannel && this.dataChannel.readyState === "open") {
       this.dataChannel.send(message);
-      console.log(" Message sent:", message);
+      console.log("Message sent:", message);
     } else {
       console.log(
-        " Data channel not open. State:",
+        "Data channel not open. State:",
         this.dataChannel?.readyState,
       );
     }
@@ -195,5 +197,3 @@ class WebRTCPeerConnection {
 }
 
 export default WebRTCPeerConnection;
-
-// 2)
