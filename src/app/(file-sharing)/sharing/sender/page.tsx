@@ -4,11 +4,11 @@ import { useSocket } from "@/context/SocketProvider";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import WebRTCPeerConnection from "@/lib/PeerToPeer";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 type UploadStatus = "idle" | "uploading" | "success" | "error";
-type ConnectionStatus = "waiting" | "connected" | "idle";
 
-const CHUNK_SIZE = 16 * 1024; // 16 KB
+const CHUNK_SIZE = 40 * 1024; // 16 KB
 
 const FileSharing = () => {
   const { socket, socketId, userId } = useSocket();
@@ -20,9 +20,12 @@ const FileSharing = () => {
   const [status, setStatus] = useState<UploadStatus>("idle");
   const [progress, setProgress] = useState<number>(0);
   const [isUploading, setIsUploading] = useState<boolean>(false);
-  const [connectionStatus, setConnectionStatus] =
-    useState<ConnectionStatus>("idle");
   const [isRegistered, setIsRegistered] = useState(false);
+
+  const [isDataChannelOpen, setIsDataChannelOpen] = useState(false);
+  const [webrtcConnectionState, setWebrtcConnectionState] =
+    useState<string>("new");
+  const [isProcessingConnection, setIsProcessingConnection] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -39,7 +42,15 @@ const FileSharing = () => {
   };
 
   const handleWebRTCFileUpload = () => {
-    if (!sender || !file) return;
+    if (!sender || !file) {
+      alert("No connection or file selected");
+      return;
+    }
+
+    if (!sender.isDataChannelOpen()) {
+      alert("Data channel not ready yet. Please wait a moment and try again.");
+      return;
+    }
 
     setIsUploading(true);
     setStatus("uploading");
@@ -82,7 +93,7 @@ const FileSharing = () => {
 
         // 3️⃣ Continue or finish
         if (offset < file.size) {
-          setTimeout(sendNextChunk, 10); // prevents buffer overload
+          setTimeout(sendNextChunk, 10);
         } else {
           sender.sendMessage(JSON.stringify({ type: "file-complete" }));
           setIsUploading(false);
@@ -94,6 +105,37 @@ const FileSharing = () => {
     };
 
     sendNextChunk();
+  };
+
+  const setupWebRTCHandlers = (peer: WebRTCPeerConnection) => {
+    // Handle connection state changes
+    peer.onConnectionState((state) => {
+      console.log("WebRTC Connection State:", state);
+      setWebrtcConnectionState(state);
+
+      if (state === "connected") {
+        console.log(" WebRTC fully connected!");
+        // Check data channel status
+        setTimeout(() => {
+          setIsDataChannelOpen(peer.isDataChannelOpen());
+        }, 100);
+      } else if (state === "disconnected" || state === "failed") {
+        setIsDataChannelOpen(false);
+      }
+    });
+
+    const checkDataChannel = () => {
+      const isOpen = peer.isDataChannelOpen();
+      setIsDataChannelOpen(isOpen);
+
+      if (isOpen) {
+        console.log(" Data channel is ready for file transfer!");
+      } else {
+        setTimeout(checkDataChannel, 500);
+      }
+    };
+
+    checkDataChannel();
   };
 
   const copyShareableLink = () => {
@@ -114,7 +156,6 @@ const FileSharing = () => {
         socketId: socket.id,
       });
       setIsRegistered(true);
-      setConnectionStatus("waiting");
     };
 
     if (socket.connected) {
@@ -124,73 +165,82 @@ const FileSharing = () => {
 
     socket.on("incoming-connection", (data) => {
       console.log("Sender: Incoming connection request:", data);
-      setConnectionRequests((prev) => [...prev, data]);
+
+      if (isProcessingConnection) {
+        console.log(
+          " Already processing connection, ignoring duplicate request",
+        );
+        return;
+      }
+
+      if (sender) {
+        console.log(" Sender already exists, reusing existing connection");
+        setConnectedUser(data.fromUserId);
+        return;
+      }
+
+      setIsProcessingConnection(true);
       setConnectedUser(data.fromUserId);
-      setConnectionStatus("connected");
+      console.log("Sender: Creating NEW sender for incoming connection...");
 
-      setSender((currentSender) => {
-        if (!currentSender) {
-          console.log(
-            "Sender: Auto-creating sender for incoming connection...",
-          );
-          const senderPeer = new WebRTCPeerConnection(true);
+      const senderPeer = new WebRTCPeerConnection(true);
+      setSender(senderPeer);
 
-          // Auto-send offer after short delay
-          setTimeout(async () => {
-            try {
-              console.log("Sender: Creating and sending offer...");
-              const offer = await senderPeer.createOffer();
+      setupWebRTCHandlers(senderPeer);
 
-              socket.emit("offer", {
-                targetUserId: data.fromUserId,
-                offer: offer,
-              });
-              console.log("Sender: Offer sent to", data.fromUserId);
-            } catch (error) {
-              console.error("Sender: Error creating offer:", error);
-            }
-          }, 300);
+      setTimeout(async () => {
+        try {
+          console.log("Sender: Creating and sending offer...");
+          const offer = await senderPeer.createOffer();
 
-          return senderPeer;
-        } else {
-          console.log("Sender: Using existing sender peer");
-          return currentSender;
+          if (offer) {
+            socket.emit("offer", {
+              targetUserId: data.fromUserId,
+              offer: offer,
+            });
+            console.log("Sender: Offer sent to", data.fromUserId);
+          }
+        } catch (error) {
+          console.error("Sender: Error creating offer:", error);
+          setIsProcessingConnection(false);
         }
-      });
+      }, 300);
     });
 
     socket.on("answer", async (data) => {
       console.log("Sender: Received WebRTC answer from:", data.fromUserId);
 
-      setSender((currentSender) => {
-        if (currentSender) {
-          currentSender
-            .setRemoteAnswer(data.answer)
-            .then(() => {
-              console.log("Sender: P2P CONNECTION ESTABLISHED!");
-              setConnectionStatus("connected");
-            })
-            .catch((error) => {
-              console.error("Sender: Error setting remote answer:", error);
-            });
-        }
-        return currentSender;
-      });
+      if (!sender) {
+        console.log(" No sender peer available to set answer");
+        return;
+      }
+
+      try {
+        await sender.setRemoteAnswer(data.answer);
+        console.log(" Sender: P2P CONNECTION ESTABLISHED!");
+        setIsProcessingConnection(false);
+      } catch (error) {
+        console.error(" Sender: Error setting remote answer:", error);
+        setIsProcessingConnection(false);
+      }
     });
 
     socket.on("connection-requested", (data) => {
-      console.log("Sender: Connection request sent:", data);
+      console.log("Sender: Connection request received:", data);
     });
 
     socket.on("connection-failed", (data) => {
       console.log("Sender: Connection failed:", data);
+      setIsProcessingConnection(false);
       alert(`Connection failed: ${data.reason}`);
     });
 
     socket.on("disconnect", () => {
       console.log("Sender: Socket disconnected!");
       setIsRegistered(false);
-      setConnectionStatus("idle");
+      setIsDataChannelOpen(false);
+      setWebrtcConnectionState("new");
+      setIsProcessingConnection(false);
     });
 
     return () => {
@@ -202,50 +252,91 @@ const FileSharing = () => {
       socket.off("connection-failed");
       socket.off("disconnect");
     };
-  }, [socket, userId]);
+  }, [socket, userId, sender, isProcessingConnection]);
+
+  const resetConnection = () => {
+    if (sender) {
+      sender.close();
+    }
+    setSender(null);
+    setConnectedUser("");
+    setIsDataChannelOpen(false);
+    setWebrtcConnectionState("new");
+    setIsProcessingConnection(false);
+    setStatus("idle");
+    setProgress(0);
+    console.log(" Connection reset");
+  };
+
+  // Check if we can send files
+  const canSendFiles = sender && isDataChannelOpen && !isUploading;
 
   return (
     <div className="space-y-6 max-w-md mx-auto p-4">
-      <h2 className="text-2xl font-bold">📤 Send Files P2P</h2>
+      <h2 className="text-2xl font-bold"> Send Files P2P</h2>
 
       {/* Connection Status */}
       <div className="p-4 border rounded-lg">
-        <p className="text-sm mb-2">
-          <strong>Status:</strong>{" "}
-          <span
-            className={
-              connectionStatus === "connected"
-                ? "text-green-600"
-                : connectionStatus === "waiting"
-                  ? "text-yellow-600"
-                  : "text-gray-600"
-            }
-          >
-            {connectionStatus === "idle" && "Not registered"}
-            {connectionStatus === "waiting" && "Waiting for receiver..."}
-            {connectionStatus === "connected" &&
-              `✅ Connected to ${connectedUser}`}
-          </span>
-        </p>
+        <div className="flex justify-between items-center mb-2">
+          <p className="text-sm">
+            <strong>Status:</strong>{" "}
+            <span
+              className={
+                isDataChannelOpen
+                  ? "text-green-600"
+                  : connectedUser
+                    ? "text-yellow-600"
+                    : "text-gray-600"
+              }
+            >
+              {!connectedUser && "Waiting for receiver..."}
+              {connectedUser &&
+                !isDataChannelOpen &&
+                ` Connecting to ${connectedUser}...`}
+              {connectedUser &&
+                isDataChannelOpen &&
+                ` Ready to send to ${connectedUser}`}
+            </span>
+          </p>
 
-        <p className="text-xs text-gray-500">
-          Socket: {socketId ? "✅ Connected" : "❌ Disconnected"}
-        </p>
-        <p className="text-xs text-gray-500">
-          Registered: {isRegistered ? "✅ Yes" : "❌ No"}
-        </p>
+          {connectedUser && (
+            <Button onClick={resetConnection} variant="outline" size="sm">
+              Reset
+            </Button>
+          )}
+        </div>
+
+        <div className="text-xs text-gray-500 space-y-1">
+          <p>Socket: {socketId ? "✅ Connected" : "❌ Disconnected"}</p>
+          <p>Registered: {isRegistered ? "✅ Yes" : "❌ No"}</p>
+          <p>WebRTC Peer: {sender ? "✅ Created" : "❌ Not Created"}</p>
+          <p>
+            WebRTC State:{" "}
+            <span className="font-mono">{webrtcConnectionState}</span>
+          </p>
+          <p>Data Channel: {isDataChannelOpen ? "✅ Open" : "❌ Closed"}</p>
+          <p>Ready to Send: {canSendFiles ? "✅ Yes" : "❌ Not Ready"}</p>
+          <p>Processing: {isProcessingConnection ? "⏳ Yes" : "✅ No"}</p>
+        </div>
       </div>
 
       {/* Share Link */}
-      <div className="p-4 bg-green-800 border border-blue-200 rounded-lg">
+      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
         <h3 className="font-medium mb-2">📋 Your Shareable Link</h3>
         <div className="bg-gray-900 p-2 rounded mb-2">
           <code className="text-blue-400 text-xs break-all">
             {shareableLink}
           </code>
         </div>
-        <Button onClick={copyShareableLink} variant="outline" size="sm">
-          📋 Copy Link
+        <Button
+          // onClick={copyShareableLink}
+          variant="outline"
+          size="sm"
+          className="bg-green-200"
+        >
+          <Link href={shareableLink} target="_blank">
+            Go To Link
+          </Link>
         </Button>
         <p className="text-xs text-gray-500 mt-2">
           Share this link to send files to someone!
@@ -295,17 +386,23 @@ const FileSharing = () => {
 
         {/* Send Button */}
         <Button
-          disabled={!file || isUploading || connectionStatus !== "connected"}
+          disabled={!file || !canSendFiles}
           onClick={handleWebRTCFileUpload}
           className="w-full"
         >
           {isUploading ? "📤 Sending..." : "📤 Send File"}
         </Button>
 
-        {status === "success" && (
-          <p className="text-green-600 text-center">
-            ✅ File sent successfully!
+        {/* Helpful Messages */}
+        {file && !canSendFiles && (
+          <p className="text-xs text-gray-500 text-center">
+            {!sender && "Waiting for receiver to connect..."}
+            {sender && !isDataChannelOpen && "🔗 Data channel opening..."}
           </p>
+        )}
+
+        {status === "success" && (
+          <p className="text-green-600 text-center">File sent successfully!</p>
         )}
       </div>
     </div>
