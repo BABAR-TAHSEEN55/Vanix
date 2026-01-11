@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Menu, X, Box, Lock, Star, Github } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -15,6 +15,7 @@ const Navbar = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
   useEffect(() => {
     if (mobileMenuOpen) {
       document.body.classList.add("overflow-y-hidden");
@@ -23,11 +24,31 @@ const Navbar = () => {
     }
   }, [mobileMenuOpen]);
 
+  // Optimized scrollIntoView handler
+  const handleScrollTo = useCallback((sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      // Small delay to ensure any animations complete
+      requestAnimationFrame(() => {
+        element.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+          inline: "nearest",
+        });
+      });
+    }
+
+    setMobileMenuOpen(false);
+  }, []);
+
   const navLinks = [
-    { name: "Protocol", href: "#features" },
-    { name: "Keys", href: "#" },
-    { name: "Relays", href: "#" },
-    { name: "Manifesto", href: "#hero" },
+    { name: "Protocol", href: "#", action: () => {} },
+    {
+      name: "Features",
+      href: "#features",
+      action: () => handleScrollTo("features"),
+    },
+    { name: "Manifesto", href: "#hero", action: () => handleScrollTo("hero") },
   ];
 
   return (
@@ -50,7 +71,6 @@ const Navbar = () => {
               <div className="absolute inset-0 bg-neon-green/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
             <div className="font-mono font-bold text-xl tracking-widest group-hover:text-glow-green transition-all text-white">
-
               Vanix
             </div>
           </div>
@@ -59,14 +79,14 @@ const Navbar = () => {
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-8 ">
           {navLinks.map((link) => (
-            <Link
+            <button
               key={link.name}
-              href={link.href}
-              className="text-xs font-mono uppercase tracking-widest text-white/60 hover:text-[#00ff41] hover:shadow-[0_3px_0_currentColor]  transition-all  "
+              onClick={link.action}
+              className="text-xs font-mono uppercase tracking-widest text-white/60 hover:text-[#00ff41] hover:shadow-[0_3px_0_currentColor] transition-all cursor-pointer"
             >
               <span className="mr-1 opacity-50 text-[#b026ff]">{`//`}</span>{" "}
               {link.name}
-            </Link>
+            </button>
           ))}
         </div>
 
@@ -84,7 +104,7 @@ const Navbar = () => {
           </Link>
           <Button variant="custom" size="sm">
             <Lock size={14} />
-            <Link href={"/composer"}>Open Vault</Link>
+            <Link href={"/composer"}>Open Session</Link>
           </Button>
         </div>
 
@@ -100,17 +120,16 @@ const Navbar = () => {
       {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div
-          className={`md:hidden absolute  top-full left-0 right-0 bg-black/95 backdrop-blur-xl border-b border-white/10 p-6 flex flex-col gap-4 animate-in slide-in-from-top-2 h-screen`}
+          className={`md:hidden absolute top-full left-0 right-0 bg-black/95 backdrop-blur-xl border-b border-white/10 p-6 flex flex-col gap-4 animate-in slide-in-from-top-2 h-screen`}
         >
           {navLinks.map((link) => (
-            <Link
+            <button
               key={link.name}
-              href={link.href}
-              className="text-lg font-mono font-bold text-white hover:text-neon-green border-l-2 border-transparent hover:border-neon-green pl-4 transition-all "
-              onClick={() => setMobileMenuOpen(false)}
+              onClick={link.action}
+              className="text-lg font-mono font-bold text-white hover:text-neon-green border-l-2 border-transparent hover:border-neon-green pl-4 transition-all text-left"
             >
               {link.name}
-            </Link>
+            </button>
           ))}
           <div className="h-px bg-white/10 my-4" />
           <Link href={"/composer"}>

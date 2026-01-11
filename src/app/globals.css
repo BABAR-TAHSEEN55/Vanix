@@ -1,6 +1,14 @@
-@import 'tailwindcss';
-@import 'tw-animate-css';
+@import "tailwindcss";
+@import "tw-animate-css";
 
+html {
+  scroll-behavior: smooth;
+}
+
+/* Better scroll performance */
+* {
+  scroll-margin-top: 100px; /* Offset for sticky navbar */
+}
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -203,4 +211,7 @@
 
 .shadow-neon-green\/5 {
   box-shadow: 0 25px 50px -12px rgba(0, 255, 65, 0.05);
+}
+.bg-neon-purple {
+  background-color: #bc13fe;
 }

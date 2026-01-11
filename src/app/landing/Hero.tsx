@@ -3,6 +3,7 @@
 import { ArrowRight, FileLock2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import AnimatedCounter from "../common/AnimatedCounter";
 
 const Hero = () => {
   const scrollToComposer = () => {
@@ -10,7 +11,10 @@ const Hero = () => {
   };
 
   return (
-    <section className="relative min-h-screen flex items-center pt-10 md:pt-1 overflow-hidden ">
+    <section
+      id="hero"
+      className="relative min-h-screen flex items-center pt-10 md:pt-1 overflow-hidden "
+    >
       {/* Background Elements */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-neutral-900/40 via-void to-void z-0" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-neon-green/10 blur-[120px] rounded-full mix-blend-screen pointer-events-none animate-pulse-slow" />
@@ -69,7 +73,7 @@ const Hero = () => {
               <Link href={"/composer"}>Start Encrypted Session</Link>
             </Button>
             <Link
-              href={"https://github.com/BABAR-TAHSEEN55/Vanix"}
+              href={"http://localhost:3000/sharing/sender"}
               className="w-full"
             >
               <Button
@@ -100,12 +104,12 @@ const Hero = () => {
               {[
                 {
                   label: "RELAYS ONLINE",
-                  value: "4,096",
+                  value: 4096,
                   color: "text-neon-green",
                 },
                 {
                   label: "MESSAGES BURNED",
-                  value: "891,202",
+                  value: 8000,
                   color: "text-neon-purple",
                 },
                 {
@@ -125,7 +129,11 @@ const Hero = () => {
                   <span
                     className={`text-2xl font-bold ${stat.color} filter drop-shadow-sm`}
                   >
-                    {stat.value}
+                    {typeof stat.value == "number" ? (
+                      <AnimatedCounter from={0} to={stat.value} />
+                    ) : (
+                      <span>{stat.value}</span>
+                    )}
                   </span>
                 </div>
               ))}
