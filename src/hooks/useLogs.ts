@@ -1,13 +1,17 @@
 import { useState } from "react";
 
 const useLogs = () => {
-  const [addLog, setLogs] = useState<string[]>([]);
+  const [logs, setLogs] = useState<string[]>([]);
 
-  const AddLog = (msg: string) => {
+  const addLog = (msg: string) => {
     setLogs((prev) => [
       `[${new Date().toLocaleTimeString()}] ${msg}`,
       ...prev.slice(0, 10),
     ]);
   };
-  return { addLog, setLogs };
+  const clearLogs = () => {
+    setLogs([]);
+  };
+  return { logs, addLog, setLogs, clearLogs };
 };
+export default useLogs;
