@@ -2,21 +2,22 @@
 //   console.log(`Message received from the worker..`);
 //
 //   const result = event.data * 2;
-//   TODO : Give it proper types
+
 //   self.postMessage(result);
 
-let chunks: any = [];
+let chunks: Uint8Array<ArrayBuffer>[] = [];
 let startTime: number;
 let fileSize;
-let chunkSize = 40000;
+const chunkSize = 40000;
 let currentChunk = 0;
-let totalChunks: any;
-let currentProgress = 0;
-let prevProgress = 0;
+// let totalChunks: any;
+// const currentProgress = 0;
+// const prevProgress = 0;
 
 self.addEventListener("message", (e) => {
   if (e.data.status == "file-info") {
     fileSize = e.data.fileSize;
+    console.log(fileSize);
   } else if (e.data.status == "file-complete") {
     const blob = new Blob(chunks, { type: "application/octet-stream" });
     self.postMessage({

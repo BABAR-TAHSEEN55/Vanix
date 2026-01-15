@@ -60,7 +60,7 @@ const MessageComposer = () => {
 
       await axios.post("/api/message", payload).then((res) => {
         setData(res.data);
-        console.log("Augemented", res.data);
+        // console.log("Augemented", res.data);
       });
     } catch (err) {
       console.log(err);

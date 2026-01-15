@@ -14,6 +14,7 @@ export const POST = async (req: Request) => {
     const body = (await req.json()) as PostBodyType;
 
     const { settings, res } = body;
+    console.log(settings);
 
     if (!res?.encrypted || !res.iv || !res.lookupLink) {
       return NextResponse.json(
