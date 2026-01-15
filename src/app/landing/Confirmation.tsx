@@ -19,7 +19,6 @@ const MessageConfirmationModal = ({
 
   const updateVisible = useEffectEvent(() => setIsVisible(true));
 
-  // Handle entrance/exit animations
   useEffect(() => {
     if (isOpen) {
       updateVisible();

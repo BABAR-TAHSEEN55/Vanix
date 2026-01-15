@@ -25,9 +25,7 @@ export default Home;
 //FIX:: All Todos needs to be done today
 
 //TODO :
-//8) Overall Refactoring and Push
 //9) Password based Encryption configuration
 //7) Breaking on Small UI
-//
 //5) Overall CSS Issue
 //6) Deployment of Signalling Server with containeraization
