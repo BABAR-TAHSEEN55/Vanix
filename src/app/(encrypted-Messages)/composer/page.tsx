@@ -1,48 +1,45 @@
 "use client";
 
 import CommonComposer from "@/app/common/CommonComposer";
-import QRContainer from "@/app/common/QRContainer";
-import { Button } from "@/components/ui/button";
+import Configure from "@/app/composer/steps/Configure";
+
+import Input from "@/app/composer/steps/Input";
+import PasswordSetup from "@/app/composer/steps/passwordSetup";
+import Processing from "@/app/composer/steps/Processing";
+import Result from "@/app/composer/steps/Result";
+
 import { getBaseUrl } from "@/lib/config";
 import { NewEncryption } from "@/lib/encryptionClient";
-import { PostBodyType } from "@/types/common";
-import axios from "axios";
 import {
-  AlertTriangle,
-  Check,
-  Clock,
-  Copy,
-  Cpu,
-  Eye,
-  Lock,
-  RefreshCw,
-  Shield,
-  Terminal,
-} from "lucide-react";
+  EncryptionType,
+  Expiration,
+  PostBodyType,
+  ViewLimit,
+} from "@/types/common";
+import axios from "axios";
+import { Terminal } from "lucide-react";
+
 import { useEffect, useState } from "react";
-// import QRCode from "react-qr-code";
-type ViewLimit = "1 (Burn)" | "5 Views" | "10 Views" | "Unlimited";
-type EncryptionType = "AES-256-GCM" | "AES-CTR" | "PBKDF2-HMAC";
-type Expiration = "1 Hour" | "24 Hours" | "7 Days" | "Never";
+
 const InitialSettings = {
-  encryption: "AES-256-GCM",
-  views: "1 (Burn)",
-  expiration: "1 Hour",
+  encryption: "AES-256-GCM" as EncryptionType,
+  views: "1 (Burn)" as ViewLimit,
+  expiration: "1 Hour" as Expiration,
 };
 
 const MessageComposer = () => {
   const [qrState, setQr] = useState(false);
   const [message, setMessage] = useState("");
   const [Step, setStep] = useState<
-    "input" | "configure" | "processing" | "result"
+    "input" | "configure" | "processing" | "passwordSetup" | "result"
   >("input");
   const [settings, setSettings] = useState(InitialSettings);
+  const [password, setPassword] = useState<string>("");
   const [data, setData] = useState<{
     link?: string;
     fullUrl: string;
   }>();
   const [consoleLog, setConsoleLog] = useState<string[]>([]);
-  const [copy, setCopy] = useState(false);
 
   const QRToggle = () => {
     setQr((prev) => !prev);
@@ -71,14 +68,7 @@ const MessageComposer = () => {
   };
   const baseUrl = getBaseUrl();
 
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(`${baseUrl}/composer/${data?.fullUrl}`);
-    setCopy(true);
-
-    setTimeout(() => {
-      setCopy(false);
-    }, 3000);
-  };
+  // Delay effect
   useEffect(() => {
     if (Step !== "processing") return;
 
@@ -119,7 +109,6 @@ const MessageComposer = () => {
   return (
     <div>
       <div className="max-w-5xl mx-auto mt-8 md:mt-10 px-6 relative z-10">
-        {/* Header */}
         <div className="mb-10 text-center">
           <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded bg-white/5 border border-white/10">
             <Terminal size={14} className="text-neon-green" />
@@ -152,316 +141,48 @@ const MessageComposer = () => {
           }
         >
           {Step === "input" && (
-            <div className="flex flex-col h-full animate-in fade-in zoom-in-95 duration-300">
-              <textarea
-                // ref={textareaRef}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Enter your top-secret payload here..."
-                className="flex-1 bg-transparent border-none outline-none text-white/90 font-mono text-sm md:text-base resize-none placeholder:text-white/20 h-64 focus:ring-0"
-                spellCheck={false}
-              />
-              <div className="mt-6 flex justify-between items-center border-t border-white/5 pt-6">
-                <span className="text-xs md:text-lg font-mono text-white/30 flex items-center gap-2">
-                  <Cpu
-                    size={14}
-                    className="md:size-[25px] hover:text-emerald-400"
-                  />
-                  {message.length} CHARS
-                </span>
-                <Button
-                  onClick={async () => {
-                    // await SendInput();
-                    setStep("configure");
-                  }}
-                  disabled={!message.trim()}
-                  variant="secondary"
-                  size={"sm"}
-                  className="md:h-9 md:px-4 md:py-2 md:has-[>svg]:px-3"
-                  // size={"lg"}
-                  // className="h-8  gap-1.5 px-3 has-[>svg]:px-2.5"
-                >
-                  Configure Encryption
-                </Button>
-              </div>
-            </div>
+            <Input
+              message={message}
+              setMessage={setMessage}
+              onNext={() => setStep("configure")}
+            />
           )}
 
           {Step === "configure" && (
-            <div className="flex flex-col gap-8 animate-in slide-in-from-end-translate-full duration-300 ">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Encryption Select */}
-                <div className="space-y-3">
-                  <label className="text-xs font-mono text-neon-green uppercase tracking-wider flex items-center gap-2">
-                    <Shield size={14} /> Encryption Algorithm
-                  </label>
-                  <div className="flex flex-col gap-2">
-                    {(
-                      [
-                        "AES-256-GCM",
-                        "AES-CTR",
-                        "PBKDF2-HMAC",
-                      ] as EncryptionType[]
-                    ).map((type) => (
-                      <button
-                        key={type}
-                        onClick={async () => {
-                          setSettings({ ...settings, encryption: type });
-                          // await SendInput();
-                        }}
-                        className={`px-4 py-3 text-left text-xs font-mono border transition-all ${
-                          settings?.encryption === type
-                            ? "bg-neon-green/10 border-[#00ff41] text-[#00ff41]"
-                            : "bg-white/5 border-transparent text-white/50 hover:bg-white/10 hover:text-white"
-                        }`}
-                      >
-                        {type}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Views Select */}
-                <div className="space-y-3">
-                  <label className="text-xs font-mono text-neon-purple uppercase tracking-wider flex items-center gap-2">
-                    <Eye size={14} /> View Limit
-                  </label>
-                  <div className="flex flex-col gap-2">
-                    {(
-                      [
-                        "1 (Burn)",
-                        "5 Views",
-                        "10 Views",
-                        "Unlimited",
-                      ] as ViewLimit[]
-                    ).map((limit) => (
-                      <button
-                        key={limit}
-                        onClick={() =>
-                          setSettings({ ...settings, views: limit })
-                        }
-                        className={`px-4 py-3 text-left text-xs font-mono border transition-all ${
-                          settings.views === limit
-                            ? "bg-neon-purple/10 border-neon-purple text-neon-purple"
-                            : "bg-white/5 border-transparent text-white/50 hover:bg-white/10 hover:text-white"
-                        }`}
-                      >
-                        {limit}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Expiration Select */}
-                <div className="space-y-3">
-                  <label className="text-xs font-mono text-neon-cyan uppercase tracking-wider flex items-center gap-2">
-                    <Clock size={14} /> Self-Destruct Timer
-                  </label>
-                  <div className="flex flex-col gap-2">
-                    {(
-                      ["1 Hour", "24 Hours", "7 Days", "Never"] as Expiration[]
-                    ).map((time) => (
-                      <button
-                        key={time}
-                        onClick={() =>
-                          setSettings({ ...settings, expiration: time })
-                        }
-                        className={`px-4 py-3 text-left text-xs font-mono border transition-all ${
-                          settings.expiration === time
-                            ? "bg-neon-cyan/10 border-neon-cyan text-neon-cyan"
-                            : "bg-white/5 border-transparent text-white/50 hover:bg-white/10 hover:text-white"
-                        }`}
-                      >
-                        {time}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-auto flex justify-between items-center border-t border-white/5 pt-6">
-                <button
-                  onClick={() => setStep("input")}
-                  className="text-xs font-mono text-white/50 hover:text-white uppercase tracking-wider"
-                >
-                  &lt; Back to Compose
-                </button>
-                <Button
-                  onClick={async () => {
-                    setStep("processing");
-                    await SendInput();
-                  }}
-                  size={"xs"}
-                  className="md:h-9 md:px-4 md:py-2 md:has-[>svg]:px-3"
-                >
-                  {settings.encryption === "PBKDF2-HMAC" ? (
-                    <span>Configure Password</span>
-                  ) : (
-                    <span>Generate Secure Link</span>
-                  )}
-                </Button>
-              </div>
-            </div>
+            <Configure
+              settings={settings}
+              onSettingsChange={setSettings}
+              onBack={() => setStep("input")}
+              onNext={() => {
+                if (settings.encryption === "PBKDF2-HMAC") {
+                  setStep("passwordSetup");
+                } else {
+                  setStep("processing");
+                  SendInput();
+                }
+              }}
+            />
           )}
 
-          {/*{}*/}
-          {Step === "processing" && (
-            <div className="flex flex-col items-center justify-center h-full gap-6 animate-in fade-in duration-300">
-              <RefreshCw className="w-12 h-12 text-neon-green animate-spin" />
-              <div className="w-full max-w-5xl bg-black border border-white/10 p-4 font-mono text-xs h-52 overflow-y-auto">
-                {consoleLog.map((log, i) => (
-                  <div key={i} className="text-green-500 mb-1">
-                    {log}
-                  </div>
-                ))}
-              </div>
-            </div>
+          {Step === "passwordSetup" && (
+            <PasswordSetup
+              onBack={() => setStep("configure")}
+              onNext={(selectedPassword: string) => {
+                setPassword(selectedPassword);
+                setStep("processing");
+                SendInput();
+              }}
+            />
           )}
+          {Step === "processing" && <Processing logs={consoleLog} />}
           {Step === "result" && (
-            <div className="flex flex-col items-center justify-center h-full gap-8 animate-in zoom-in-95 duration-500">
-              <div className="w-20 h-20 bg-neon-green/10 rounded-full flex items-center justify-center border border-neon-green/50 shadow-[0_0_30px_rgba(0,255,65,0.3)]">
-                <Lock className="w-10 h-10 text-neon-green" />
-              </div>
-
-              <div className="text-center">
-                <h3 className="text-2xl text-white font-bold uppercase tracking-tight mb-2">
-                  Payload Secured
-                </h3>
-                <p className="text-white/50 text-sm max-w-sm mx-auto">
-                  This link allows access to your encrypted message. It will
-                  destroy itself after{" "}
-                  {/*{settings.views === "1 (Burn)" ? "1 view" : settings.views}.*/}
-                </p>
-              </div>
-
-              <div className="w-full max-w-lg relative">
-                <input
-                  readOnly
-                  value={`${baseUrl}/composer/${data?.fullUrl}`}
-                  className="w-full bg-black border border-white/20 text-neon-green font-mono text-sm py-4 px-6 rounded
-                          focus:outline-none focus:border-neon-green transition-colors
-                          overflow-hidden text-ellipsis whitespace-nowrap
-                          pr-10"
-                />
-                <button
-                  onClick={handleCopy}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-2 hover:bg-white/10 rounded transition-colors"
-                >
-                  {copy ? (
-                    <Check size={18} className="text-neon-green" />
-                  ) : (
-                    <Copy size={18} className="text-white/70" />
-                  )}
-                </button>
-              </div>
-
-              <div className="flex gap-4">
-                <Button variant="secondary" onClick={HitReset}>
-                  Encrypt Another
-                </Button>
-                <Button variant="default" onClick={QRToggle}>
-                  Show QR Code{" "}
-                </Button>
-                {qrState && (
-                  <QRContainer
-                    value={`${baseUrl}/composer/${data?.fullUrl}`}
-                    onClose={() => setQr(false)}
-                  />
-                )}
-              </div>
-
-              <div className="flex items-center gap-2 text-[10px] text-amber-500/80 font-mono bg-amber-500/10 px-3 py-2 rounded border border-amber-500/20">
-                <AlertTriangle size={12} />
-                WARNING: WE CANNOT RECOVER THIS MESSAGE IF THE LINK IS LOST.
-              </div>
-              {/*<div
-                style={{
-                  height: "auto",
-                  margin: "0 auto",
-                  width: 200,
-                  padding: 12,
-                  background: "#ffffff",
-                  borderRadius: 12,
-                }}
-                className="rounded-xl flex flex-col items-center"
-              >
-                <QRCode
-                  size={200}
-                  style={{
-                    height: "auto",
-                    maxWidth: "200px",
-                    width: "100%",
-                    display: "block",
-                    shapeRendering: "crispEdges",
-                  }}
-                  value={`${baseUrl}/composer/${data?.fullUrl}`}
-                  viewBox={`0 0 200 200`}
-                  fgColor="#000000"
-                  bgColor="#ffffff"
-                  level="H"
-                />*/}
-
-              {/*<button
-                  onClick={async () => {
-                    try {
-                      const svg = document.querySelector(
-                        "#qr-container svg",
-                      ) as SVGSVGElement | null;
-                      if (!svg) return;
-
-                      // Serialize SVG
-                      const serializer = new XMLSerializer();
-                      const svgString = serializer.serializeToString(svg);
-
-                      // Make blob and object URL
-                      const blob = new Blob([svgString], {
-                        type: "image/svg+xml;charset=utf-8",
-                      });
-                      const url = URL.createObjectURL(blob);
-
-                      // Draw to canvas then export as PNG
-                      const img = new Image();
-                      img.onload = () => {
-                        const canvas = document.createElement("canvas");
-                        canvas.width = 200;
-                        canvas.height = 200;
-                        const ctx = canvas.getContext("2d");
-                        if (!ctx) {
-                          URL.revokeObjectURL(url);
-                          return;
-                        }
-                        // Fill white background to ensure quiet zone in PNG
-                        ctx.fillStyle = "#ffffff";
-                        ctx.fillRect(0, 0, canvas.width, canvas.height);
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        URL.revokeObjectURL(url);
-
-                        canvas.toBlob((pngBlob) => {
-                          if (!pngBlob) return;
-                          const pngUrl = URL.createObjectURL(pngBlob);
-                          const a = document.createElement("a");
-                          a.href = pngUrl;
-                          a.download = "vanix-qrcode.png";
-                          document.body.appendChild(a);
-                          a.click();
-                          a.remove();
-                          URL.revokeObjectURL(pngUrl);
-                        }, "image/png");
-                      };
-                      img.onerror = () => {
-                        URL.revokeObjectURL(url);
-                      };
-                      img.src = url;
-                    } catch (err) {
-                      console.error("QR download error:", err);
-                    }
-                  }}
-                  className="mt-3 px-3 py-1 text-xs rounded bg-white/10 hover:bg-white/20 transition-colors text-white"
-                >
-                  Download PNG
-                </button>*/}
-              {/*</div>*/}
-            </div>
+            <Result
+              url={`${baseUrl}/composer/${data?.fullUrl}`}
+              settings={settings}
+              onReset={HitReset}
+              onToggleQR={QRToggle}
+              qrState={qrState}
+            />
           )}
         </CommonComposer>
       </div>
