@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button";
 import { EncryptionType, Expiration, ViewLimit } from "@/types/common";
 import { Clock, Eye, Shield } from "lucide-react";
-import PasswordSetup from "./passwordSetup";
 
 interface ConfigureProps {
   settings: {
@@ -26,7 +25,14 @@ const Configure = ({
   onBack,
   onNext,
 }: ConfigureProps) => {
-  const updateSetting = (key: keyof typeof settings, value: any) => {
+  // const updateSetting = (key: keyof typeof settings, value: any) => {
+  //   onSettingsChange({ ...settings, [key]: value });
+  // };
+
+  const updateSetting = <K extends keyof typeof settings>(
+    key: K,
+    value: (typeof settings)[K],
+  ) => {
     onSettingsChange({ ...settings, [key]: value });
   };
 
