@@ -6,6 +6,7 @@ import {
   SetStateAction,
   useContext,
   useEffect,
+  useEffectEvent,
   useMemo,
   useState,
 } from "react";
@@ -37,13 +38,17 @@ const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const [peerState, setPeerState] = useState<string>("");
 
   const userId = useMemo(() => nanoid(10), []);
+  const HandleSetSocketState = useEffectEvent((sock: Socket) => {
+    setSocket(sock);
+  });
 
   useEffect(() => {
     const sock = io("http://localhost:8000", {
       autoConnect: true,
     });
 
-    setSocket(sock);
+    // setSocket(sock);
+    HandleSetSocketState(sock);
 
     // Connection
     sock.on("connect", () => {
