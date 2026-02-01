@@ -4,8 +4,10 @@ import { ArrowRight, FileLock2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import AnimatedCounter from "../common/AnimatedCounter";
+import { getBaseUrl } from "@/lib/config";
 
 const Hero = () => {
+  const baseurl = getBaseUrl();
   const scrollToComposer = () => {
     document.getElementById("composer")?.scrollIntoView({ behavior: "smooth" });
   };
@@ -72,10 +74,7 @@ const Hero = () => {
               <ArrowRight size={18} />
               <Link href={"/composer"}>Start Encrypted Session</Link>
             </Button>
-            <Link
-              href={"http://localhost:3000/sharing/sender"}
-              className="w-full"
-            >
+            <Link href={`${baseurl}/sharing/sender`} className="w-full">
               <Button
                 variant="custom"
                 size="lg"

@@ -43,7 +43,7 @@ const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   });
 
   useEffect(() => {
-    const sock = io("http://localhost:8000", {
+    const sock = io(process.env.SOCKET_ENDPOINT, {
       autoConnect: true,
     });
 
