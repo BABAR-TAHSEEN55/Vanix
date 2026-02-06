@@ -102,15 +102,15 @@ const Recieve = () => {
         console.log("✅ Receiver: WebRTC connection established!");
 
         // Setup message handler
-        if (receiverPeer.onMessage) {
-          receiverPeer.onMessage = (message) => {
-            console.log("📨 Receiver: Message received:", message);
-          };
-        }
+        // if (receiverPeer.onMessage) {
+        //   receiverPeer.onMessage = (message) => {
+        //     console.log("📨 Receiver: Message received:", message);
+        //   };
+        // }
       } catch (error) {
         console.error("❌ Receiver: Error handling offer:", error);
         setConnectionStatus("failed");
-        setErrorMessage(`Failed to process WebRTC offer: ${error.message}`);
+        setErrorMessage(`Failed to process WebRTC offer: ${error}`);
       }
     });
 
