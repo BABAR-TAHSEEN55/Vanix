@@ -43,9 +43,12 @@ const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   });
 
   useEffect(() => {
-    const sock = io(process.env.SOCKET_ENDPOINT, {
-      autoConnect: true,
-    });
+    const sock = io(
+      process.env.SOCKET_ENDPOINT || "https://backend.suhospace.dev",
+      {
+        autoConnect: true,
+      },
+    );
 
     // setSocket(sock);
     HandleSetSocketState(sock);
